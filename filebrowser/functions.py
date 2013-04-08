@@ -207,6 +207,7 @@ def get_settings_var():
     settings_var = {}
     # Main
     settings_var['DEBUG'] = DEBUG
+    settings_var['ADMIN_MEDIA_PREFIX'] = fb_settings.ADMIN_MEDIA_PREFIX
     settings_var['MEDIA_ROOT'] = fb_settings.MEDIA_ROOT
     settings_var['MEDIA_URL'] = fb_settings.MEDIA_URL
     settings_var['DIRECTORY'] = fb_settings.DIRECTORY

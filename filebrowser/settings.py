@@ -20,6 +20,7 @@ except ImportError:
 
 # Set to True in order to see the FileObject when Browsing.
 DEBUG = getattr(settings, "FILEBROWSER_DEBUG", False)
+ADMIN_MEDIA_PREFIX = getattr(settings, 'ADMIN_MEDIA_PREFIX', posixpath.join(settings.STATIC_URL, 'admin/'))
 
 # Main Media Settings
 MEDIA_ROOT = getattr(settings, "FILEBROWSER_MEDIA_ROOT", settings.MEDIA_ROOT)

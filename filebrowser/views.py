@@ -27,6 +27,10 @@ except:
     from django.contrib.csrf.middleware import csrf_exempt
 
 from django.contrib import messages
+try:
+    from jimmypage.utils import invalidate_cache
+except:
+    invalidate_cache = None
 
 # filebrowser imports
 from filebrowser.settings import *
@@ -298,21 +302,29 @@ def _upload_file(request):
         folder = fb_uploadurl_re.sub('', folder)
         abs_path = _check_access(request, folder)
         if request.FILES:
-            filedata = request.FILES['Filedata']
-            filedata.name = convert_filename(filedata.name)
-            _check_access(request, abs_path, filedata.name)
-            # PRE UPLOAD SIGNAL
-            filebrowser_pre_upload.send(sender=request, path=request.POST.get('folder'), file=filedata)
-            # HANDLE UPLOAD
-            uploadedfile = handle_file_upload(abs_path, filedata)
-            # MOVE UPLOADED FILE
-            # if file already exists
-            if os.path.isfile(smart_str(os.path.join(fb_settings.MEDIA_ROOT, fb_settings.DIRECTORY, folder, filedata.name))):
-                old_file = smart_str(os.path.join(abs_path, filedata.name))
-                new_file = smart_str(os.path.join(abs_path, uploadedfile))
-                file_move_safe(new_file, old_file)
-            # POST UPLOAD SIGNAL
-            filebrowser_post_upload.send(sender=request, path=request.POST.get('folder'), file=FileObject(smart_str(os.path.join(fb_settings.DIRECTORY, folder, filedata.name))))
+            try:
+                filedata = request.FILES['Filedata']
+                filedata.name = convert_filename(filedata.name)
+                _check_access(request, abs_path, filedata.name)
+                # PRE UPLOAD SIGNAL
+                filebrowser_pre_upload.send(sender=request, path=request.POST.get('folder'), file=filedata)
+                # HANDLE UPLOAD
+                uploadedfile = handle_file_upload(abs_path, filedata)
+                # MOVE UPLOADED FILE
+                # if file already exists
+                if os.path.isfile(smart_str(os.path.join(fb_settings.MEDIA_ROOT, fb_settings.DIRECTORY, folder, filedata.name))):
+                    old_file = smart_str(os.path.join(abs_path, filedata.name))
+                    new_file = smart_str(os.path.join(abs_path, uploadedfile))
+                    file_move_safe(new_file, old_file)
+                # POST UPLOAD SIGNAL
+                filebrowser_post_upload.send(sender=request, path=request.POST.get('folder'), file=FileObject(smart_str(os.path.join(fb_settings.DIRECTORY, folder, filedata.name))))
+            except Exception, e:
+                try: #try to log the error with django-db-log
+                    from djangodblog.middleware import DBLogMiddleware as M
+                    M().process_exception(request, e)
+                except:
+                    pass
+                return HttpResponseServerError(str(e))
     return HttpResponse('True')
 
 
@@ -489,4 +501,7 @@ def versions(request):
     }, context_instance=Context(request))
 versions = staff_member_required(never_cache(versions))
 
-
+if invalidate_cache:
+    _upload_file = invalidate_cache(_upload_file)
+    delete = invalidate_cache(delete)
+    rename = invalidate_cache(rename)

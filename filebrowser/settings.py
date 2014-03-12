@@ -2,6 +2,7 @@
 
 # imports
 import os
+import posixpath
 
 # django imports
 from django.conf import settings
@@ -13,7 +14,6 @@ try:
     DEFAULT_URL_TINYMCE = tinymce.settings.JS_BASE_URL + '/'
     DEFAULT_PATH_TINYMCE = tinymce.settings.JS_ROOT + '/'
 except ImportError:
-    import posixpath
     DEFAULT_URL_TINYMCE = getattr(settings, 'ADMIN_MEDIA_PREFIX',
                             posixpath.join(settings.STATIC_URL, 'admin/')) + "tinymce/jscripts/tiny_mce/"
     DEFAULT_PATH_TINYMCE = os.path.join(settings.MEDIA_ROOT, 'admin/tinymce/jscripts/tiny_mce/')
